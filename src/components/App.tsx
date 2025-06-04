@@ -1,31 +1,34 @@
+
 import React, { useState, useCallback } from 'react';
 import { ArticleForm } from './components/ArticleForm';
 import { GeneratedArticleDisplay } from './components/GeneratedArticleDisplay';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
 import { generateArticleContent } from './services/geminiService';
+import type { ArticleRequest } from './types';
 
-const App = () => {
-  const [generatedArticle, setGeneratedArticle] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [currentKeyword, setCurrentKeyword] = useState('');
+const App: React.FC = () => {
+  const [generatedArticle, setGeneratedArticle] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentKeyword, setCurrentKeyword] = useState<string>('');
 
-  const handleGenerateArticle = useCallback(async (request) => {
+  const handleGenerateArticle = useCallback(async (request: ArticleRequest) => {
     setIsLoading(true);
     setError(null);
     setGeneratedArticle(null);
-    setCurrentKeyword(request.keyword);
+    console.log("[App.tsx] Keyword received from form to be set in state:", request.keyword); // For debugging
+    setCurrentKeyword(request.keyword); 
 
     try {
       const article = await generateArticleContent(request);
       setGeneratedArticle(article);
     } catch (err) {
-      setError(
-        err.message
-          ? `خطا در تولید مقاله: ${err.message}. لطفا از تنظیم صحیح کلید API اطمینان حاصل کنید و دوباره امتحان کنید.`
-          : "خطای ناشناخته ای هنگام تولید مقاله رخ داد."
-      );
+      if (err instanceof Error) {
+        setError(`خطا در تولید مقاله: ${err.message}. لطفا از تنظیم صحیح کلید API اطمینان حاصل کنید و دوباره امتحان کنید.`);
+      } else {
+        setError("خطای ناشناخته ای هنگام تولید مقاله رخ داد.");
+      }
       console.error("Error generating article:", err);
     } finally {
       setIsLoading(false);
